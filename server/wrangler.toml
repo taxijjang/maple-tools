@@ -1,0 +1,19 @@
+name = "maple-tools"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+
+# routes를 쓰면 workers_dev가 자동으로 false가 되어 *.workers.dev가 404를 낸다.
+# 수집기 앱이 그 주소로 올릴 수도 있으니 최상위에 명시해 살려둔다.
+# (planet-megaphone 프로젝트에서 실제로 8분간 수집이 끊긴 적이 있다.)
+workers_dev = true
+
+# 아이템별 시세 JSON을 담는 R2 버킷. SQL을 안 쓴다 — 데이터가 "아이템마다 문서 하나"
+# 형태라 관계형 스키마가 필요 없고, R2는 KV보다 쓰기 한도가 훨씬 넉넉하다
+# (KV 무료: 하루 1,000쓰기 / R2 무료: 한 달 100만 쓰기 class A).
+[[r2_buckets]]
+binding = "ITEMS"
+bucket_name = "maple-tools-items"
+
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]

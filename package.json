@@ -1,0 +1,9 @@
+{
+  "name": "maple-tools",
+  "private": true,
+  "scripts": {
+    "dev": "cd server && wrangler dev",
+    "deploy": "cd server && wrangler deploy",
+    "test": "cd server && vitest run"
+  }
+}
