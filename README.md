@@ -7,7 +7,9 @@
 
 ## 구조
 
-- `server/` — Cloudflare Worker. R2에 아이템별 JSON 문서 하나씩 저장한다. SQL 없음.
+- `server/` — Cloudflare Worker + D1. 아이템(고정 스탯)과 매물(가격·잠재능력)을
+  테이블 두 개로 나눠 저장한다. 처음엔 R2에 아이템별 JSON 문서로 저장하려 했으나,
+  매물이 계속 쌓이는 구조와 안 맞아(매번 문서 전체를 읽고 다시 써야 함) D1로 바꿨다.
 - `collector/` — 안드로이드 수집 앱 (예정). 접근성 서비스로 경매장 검색·결과 읽기를
   자동화하고, 매물 아이콘을 꾹 눌러 뜨는 툴팁에서 잠재능력을 읽는다.
 
@@ -34,6 +36,7 @@ npm run deploy   # wrangler deploy
 배포 전에 필요한 것 (직접 해야 함):
 
 ```bash
-npx wrangler r2 bucket create maple-tools-items
+npx wrangler d1 create maple-tools          # 나오는 database_id를 wrangler.toml에 채운다
+npx wrangler d1 execute maple-tools --remote --file=schema.sql
 npx wrangler secret put INGEST_SECRET
 ```

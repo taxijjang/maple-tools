@@ -1,5 +1,5 @@
 import { parseTooltip, parsePrice, parseTradeDate } from './parse'
-import { getItem, putItem, mergeItem, searchNames, type Env, type Trade } from './store'
+import { getItem, saveSearch, searchNames, purge, type Env, type Trade } from './db'
 import PAGE from './page.html'
 
 const json = (data: unknown, status = 200) =>
@@ -11,9 +11,7 @@ const json = (data: unknown, status = 200) =>
  * 수집 앱이 검색 한 번의 결과를 통째로 올린다.
  *
  * 원문(OCR raw text)을 그대로 받아 서버에서 파싱한다 — 확성기 프로젝트와 같은 이유다.
- * 파싱 규칙이 바뀌어도 앱을 다시 배포할 필요가 없다. 다만 이 프로젝트는 raw를
- * 저장해두지 않는다(문서가 아이템당 하나뿐이라 재수집 원문을 쌓아둘 이유가 적다) —
- * 파싱이 틀렸으면 다음 수집 때 다시 걷어오면 된다.
+ * 파싱 규칙이 바뀌어도 앱을 다시 배포할 필요가 없다.
  */
 type IngestRow = { tooltipRaw: string; priceRaw: string; tradeDateRaw: string }
 type IngestBody = { itemName: string; rows: IngestRow[] }
@@ -56,10 +54,8 @@ async function ingest(req: Request, env: Env): Promise<Response> {
   }
   if (trades.length === 0) return json({ error: 'no valid rows' }, 400)
 
-  const existing = await getItem(env, body.itemName)
-  const doc = mergeItem(existing, { name: body.itemName, reqLevel, equipSlot, baseStats, trades }, now)
-  await putItem(env, doc)
-  return json({ item: doc.name, trades: doc.trades.length, added: trades.length })
+  const added = await saveSearch(env, body.itemName, { reqLevel, equipSlot, baseStats, trades }, now)
+  return json({ item: body.itemName, scanned: trades.length, added })
 }
 
 async function itemDetail(name: string, env: Env): Promise<Response> {
@@ -87,5 +83,11 @@ export default {
       })
     }
     return new Response('not found', { status: 404 })
+  },
+
+  /** 보관 기간·상한을 넘는 매물을 매일 정리한다(wrangler.toml의 crons). */
+  async scheduled(_event: ScheduledController, env: Env): Promise<void> {
+    const removed = await purge(env, Date.now())
+    console.log(`정리: ${removed}행 삭제`)
   },
 }

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import worker from '../src/index'
-import { fakeR2 } from './fakeR2'
+import { fakeD1 } from './fakeD1'
 
 const REAL_TOOLTIP = `검은색 허리띠
 (유니크 아이템)
@@ -17,7 +17,7 @@ INT : +12
 DEX : +6%`
 
 function makeEnv() {
-  return { ITEMS: fakeR2() as any, INGEST_SECRET: 'topsecret' }
+  return { DB: fakeD1(), INGEST_SECRET: 'topsecret' }
 }
 
 describe('/ingest', () => {
@@ -40,7 +40,7 @@ describe('/ingest', () => {
     }), env, {} as any)
     expect(res.status).toBe(200)
     const body = await res.json() as any
-    expect(body.trades).toBe(1)
+    expect(body.added).toBe(1)
 
     const detail = await worker.fetch(
       new Request(`https://x/api/items/${encodeURIComponent('검은색 허리띠')}`), env, {} as any)
