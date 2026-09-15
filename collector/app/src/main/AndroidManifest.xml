@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- IME를 코드로 조용히 전환하는 데 필요하다. 정상적인 dangerous-permission 다이얼로그로는
+         안 뜨고, 설치 후 한 번 `adb shell pm grant maple.tools.collector
+         android.permission.WRITE_SECURE_SETTINGS`를 실행해야 실제로 허용된다. -->
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+
+    <application
+        android:allowBackup="false"
+        android:label="메이플 시세 수집기"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AppCompat.DayNight">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".CollectorService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
+
+        <!-- 탭·꾹 누르기를 좌표로 실행하는 몸통. 게임 화면이 유니티 SurfaceView 하나뿐이라
+             노드를 못 찾으므로, 여기서는 오직 dispatchGesture만 쓴다. -->
+        <service
+            android:name=".GestureService"
+            android:exported="false"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/gesture_service_config" />
+        </service>
+
+        <!-- 검색어를 한 번에 꽂아 넣기 위한, 우리가 직접 만든 조용한 키보드.
+             자모를 좌표로 하나씩 눌러 조합하는 방식(이 프로젝트 초기 조사에서 여러 번
+             실패했다)을 완전히 피한다. -->
+        <service
+            android:name=".SearchIme"
+            android:exported="false"
+            android:permission="android.permission.BIND_INPUT_METHOD">
+            <intent-filter>
+                <action android:name="android.view.InputMethod" />
+            </intent-filter>
+            <meta-data android:name="android.view.im" android:resource="@xml/method" />
+        </service>
+    </application>
+</manifest>

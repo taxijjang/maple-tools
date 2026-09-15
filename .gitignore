@@ -2,3 +2,7 @@ node_modules/
 .wrangler/
 *.log
 .DS_Store
+.gradle/
+collector/local.properties
+collector/*/build/
+collector/build/
